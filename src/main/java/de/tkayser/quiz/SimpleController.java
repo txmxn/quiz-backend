@@ -6,9 +6,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class SimpleController {
 
-    @GetMapping("/")
-    public String homePage() {
-        return "Hello World";
+    @GetMapping(path = "/", produces =  "application/json")
+    public Welcome homePage() {
+        Welcome welcome = new Welcome();
+        welcome.message = "Hello World";
+        return welcome;
     }
 
 }
