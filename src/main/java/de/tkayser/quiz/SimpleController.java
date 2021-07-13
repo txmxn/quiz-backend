@@ -14,11 +14,13 @@ public class SimpleController {
     private static final int MAX_QUESTIONS = 10;
 
     private Random RANDOMIZER = new Random();
+    private int highscore = 0;
 
     @GetMapping(path = "/", produces =  "application/json")
-    public Welcome welcome(HttpSession session) {
+    public Welcome welcome() {
         Welcome welcome = new Welcome();
         welcome.message = "Willkommen beim Quiz!";
+        welcome.highscore = highscore;
         return welcome;
     }
 
@@ -33,10 +35,13 @@ public class SimpleController {
                         Integer points = getPointsFromSession(session);
                         Integer score = getScoreFromSession(session);
                         score += points;
+                        if (highscore < score) {
+                            highscore = score;
+                        }
                         session.setAttribute("score", score);
                         session.removeAttribute("points");
                         session.removeAttribute("checked");
-                        return new Answer(true, points, 3, score);
+                        return new Answer(true, points, 3, score, highscore);
                     } else {
                         List<String> checked = getCheckedFromSession(session);
                         Integer points = getPointsFromSession(session);
@@ -47,11 +52,11 @@ public class SimpleController {
                         }
                         session.setAttribute("points", points);
                         session.setAttribute("checked", checked);
-                        return new Answer(false, 0, points, score);
+                        return new Answer(false, 0, points, score, highscore);
                     }
                 }
             }
-            return new Answer(false, 0, 0, 0);
+            return new Answer(false, 0, 0, 0, highscore);
         }
     }
 
