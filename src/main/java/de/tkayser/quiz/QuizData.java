@@ -1,5 +1,7 @@
 package de.tkayser.quiz;
 
+import java.util.List;
+
 public class QuizData {
-    public QuizQuestion[] daten = new QuizQuestion[10];
+    public List<QuizQuestion> daten;
 }

@@ -11,12 +11,12 @@ import java.util.*;
 @CrossOrigin(origins = "http://localhost:8080", methods = {RequestMethod.GET, RequestMethod.POST}, allowCredentials = "true")
 public class SimpleController {
 
+    private static final int MAX_QUESTIONS = 10;
+
     private Random RANDOMIZER = new Random();
 
     @GetMapping(path = "/", produces =  "application/json")
     public Welcome welcome(HttpSession session) {
-
-        session.setAttribute("foo", "bar");
         Welcome welcome = new Welcome();
         welcome.message = "Willkommen beim Quiz!";
         return welcome;
@@ -26,43 +26,53 @@ public class SimpleController {
     public Answer question(@RequestBody Data data, HttpSession session) throws IOException {
         try (InputStreamReader reader = new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream("database.json"))) {
             QuizData quiz = loadQuizData(reader);
-            for (int i = 0; i < quiz.daten.length; i++) {
-                QuizQuestion quizQuestion = quiz.daten[i];
+            for (int i = 0; i < quiz.daten.size(); i++) {
+                QuizQuestion quizQuestion = quiz.daten.get(i);
                 if (quizQuestion.question.equals(data.frage)) {
                     if (quizQuestion.answers[quizQuestion.right].equals(data.antwort)) {
                         Integer points = getPointsFromSession(session);
+                        Integer score = getScoreFromSession(session);
+                        score += points;
+                        session.setAttribute("score", score);
                         session.removeAttribute("points");
                         session.removeAttribute("checked");
-                        return new Answer(true, points, 3);
+                        return new Answer(true, points, 3, score);
                     } else {
                         List<String> checked = getCheckedFromSession(session);
                         Integer points = getPointsFromSession(session);
+                        Integer score = getScoreFromSession(session);
                         if (points > 0 && !checked.contains(data.antwort)) {
                             points--;
                             checked.add(data.antwort);
                         }
                         session.setAttribute("points", points);
                         session.setAttribute("checked", checked);
-                        return new Answer(false, 0, points);
+                        return new Answer(false, 0, points, score);
                     }
                 }
             }
-            return new Answer(false, 0, 0);
+            return new Answer(false, 0, 0, 0);
         }
     }
 
     private Integer getPointsFromSession(HttpSession session) {
         Integer points = (Integer) session.getAttribute("points");
-        System.out.println(session + ": " + points);
         if (points == null) {
             points = Integer.valueOf(3);
         }
         return points;
     }
 
+    private Integer getScoreFromSession(HttpSession session) {
+        Integer score = (Integer) session.getAttribute("score");
+        if (score == null) {
+            score = Integer.valueOf(0);
+        }
+        return score;
+    }
+
     private List<String> getCheckedFromSession(HttpSession session) {
         List<String> checked = (List<String>) session.getAttribute("checked");
-        System.out.println(session + ": " + checked);
         if (checked == null) {
             checked = new ArrayList<String>();
         }
@@ -70,17 +80,28 @@ public class SimpleController {
     }
 
     @GetMapping(path = "/quiz", produces =  "application/json")
-    public QuizData quiz() throws IOException {
+    public QuizData quiz(HttpSession session) throws IOException {
+        session.removeAttribute("score");
+        session.removeAttribute("points");
+        session.removeAttribute("checked");
         try (InputStreamReader reader = new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream("database.json"))) {
             QuizData quiz = loadQuizData(reader);
-            quiz.daten = shullfeData(quiz.daten);
-            for (int i = 0; i < quiz.daten.length; i++) {
-                shuffle(quiz.daten[i]);
-                quiz.daten[i].right = -1;
+            limitMaxQuestions(quiz);
+            Collections.shuffle(quiz.daten);
+            for (int i = 0; i < quiz.daten.size(); i++) {
+                shuffle(quiz.daten.get(i));
+                quiz.daten.get(i).right = -1;
             }
             return quiz;
         }
     }
+
+    private void limitMaxQuestions(QuizData quiz) {
+        while(quiz.daten.size() > MAX_QUESTIONS) {
+            quiz.daten.remove(RANDOMIZER.nextInt(quiz.daten.size()));
+        }
+    }
+
     private void shuffle(QuizQuestion element) {
         for (int i = element.answers.length -1 ; i > 0; i--) {
             int j = RANDOMIZER.nextInt(i + 1);
@@ -96,10 +117,8 @@ public class SimpleController {
        }
     }
 
-    private QuizQuestion[] shullfeData(QuizQuestion[] questions) {
-        List<QuizQuestion> quizQuestions = Arrays.asList(questions);
-        Collections.shuffle(quizQuestions);
-       return quizQuestions.toArray(questions);
+    private void shullfeData(List<QuizQuestion> questions) {
+
     }
 
     private QuizData loadQuizData(InputStreamReader reader) {

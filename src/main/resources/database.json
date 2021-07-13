@@ -99,6 +99,66 @@
         "460°"
       ],
       "right":3
+    },
+    {
+      "question":"Heißt es ___ gerade Kurve?",
+      "answers":[
+        "der",
+        "die",
+        "das",
+        "Keine der Antworten"
+      ],
+    "right":3
+    },
+    {
+      "question":"Wie viele Weihnachtsbäume werden in Deutschland pro Jahr verkauft?",
+      "answers":[
+        "Etwa 30 Millionen",
+        "Etwa 45 Millionen",
+        "Etwa 15 Millionen",
+        "Etwa 24 Millionen"
+      ],
+      "right":0
+    },
+    {
+      "question":"Wie viele Liter Bier werden in Deutschland pro Kopf jährlich getrunken?",
+      "answers":[
+        "250 Liter",
+        "200 Liter",
+        "800 Liter",
+        "100 Liter"
+      ],
+      "right":3
+    },
+    {
+      "question":"Wie lang ist der Begattungsapparat der 15 cm langen Bananenschnecke?",
+      "answers":[
+        "20cm",
+        "3,7mm",
+        "80cm",
+        "1cm"
+      ],
+      "right":2
+    },
+    {
+      "question":"Wie viele Buchstaben hat das hawaiianische Alphabet?",
+      "answers":[
+        "19",
+        "12",
+        "26",
+        "32"
+      ],
+      "right":1
+    },
+    {
+      "question":"Wie viele Einkerbungen hat ein Golfball?",
+      "answers":[
+        "234",
+        "120",
+        "336",
+        "178"
+      ],
+      "right":2
     }
   ]
-}
+  }
