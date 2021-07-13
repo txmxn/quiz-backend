@@ -1,10 +1,7 @@
 package de.tkayser.quiz;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
 import java.util.*;
@@ -20,6 +17,24 @@ public class SimpleController {
         Welcome welcome = new Welcome();
         welcome.message = "Willkommen beim Quiz!";
         return welcome;
+    }
+
+    @PostMapping(path = "/questions", produces =  "application/json", consumes = "application/json")
+    public Answer question(@RequestBody Data data ) throws IOException {
+        try (InputStreamReader reader = new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream("database.json"))) {
+            QuizData quiz = loadQuizData(reader);
+            for (int i = 0; i < quiz.daten.length; i++) {
+                QuizQuestion quizQuestion = quiz.daten[i];
+                if (quizQuestion.question.equals(data.frage)) {
+                    if (quizQuestion.answers[quizQuestion.right].equals(data.antwort)) {
+                        return new Answer(true);
+                    } else {
+                        return new Answer(false);
+                    }
+                }
+            }
+            return new Answer(false);
+        }
     }
 
     @GetMapping(path = "/quiz", produces =  "application/json")
