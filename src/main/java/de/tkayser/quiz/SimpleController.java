@@ -15,6 +15,7 @@ public class SimpleController {
 
     private Random RANDOMIZER = new Random();
     private int highscore = 0;
+    private String username = "unknown";
 
     @GetMapping(path = "/", produces =  "application/json")
     public Welcome welcome() {
@@ -37,11 +38,16 @@ public class SimpleController {
                         score += points;
                         if (highscore < score) {
                             highscore = score;
+                            if (data.username == null || "".equals(data.username)) {
+                                username = "unknown";
+                            } else {
+                                username = data.username ;
+                            }
                         }
                         session.setAttribute("score", score);
                         session.removeAttribute("points");
                         session.removeAttribute("checked");
-                        return new Answer(true, points, 3, score, highscore);
+                        return new Answer(true, points, 3, score, highscore, username);
                     } else {
                         List<String> checked = getCheckedFromSession(session);
                         Integer points = getPointsFromSession(session);
@@ -52,11 +58,11 @@ public class SimpleController {
                         }
                         session.setAttribute("points", points);
                         session.setAttribute("checked", checked);
-                        return new Answer(false, 0, points, score, highscore);
+                        return new Answer(false, 0, points, score, highscore, username);
                     }
                 }
             }
-            return new Answer(false, 0, 0, 0, highscore);
+            return new Answer(false, 0, 0, 0, highscore, username);
         }
     }
 
