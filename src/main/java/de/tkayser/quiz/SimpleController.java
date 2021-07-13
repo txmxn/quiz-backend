@@ -7,7 +7,7 @@ import java.io.*;
 import java.util.*;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:8080")
+@CrossOrigin(origins = "http://localhost:8080", methods = {RequestMethod.GET, RequestMethod.POST})
 public class SimpleController {
 
     private Random RANDOMIZER = new Random();
@@ -44,6 +44,7 @@ public class SimpleController {
             quiz.daten = shullfeData(quiz.daten);
             for (int i = 0; i < quiz.daten.length; i++) {
                 shuffle(quiz.daten[i]);
+                quiz.daten[i].right = -1;
             }
             return quiz;
         }
