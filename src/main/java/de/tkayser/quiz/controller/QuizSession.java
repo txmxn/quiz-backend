@@ -6,7 +6,7 @@ import java.util.List;
 
 public class QuizSession implements Serializable {
 
-    public static final int MAX_POINTS = 5;
+    public static final int MAX_POINTS = 3;
 
     public int score = 0;
     public int points = MAX_POINTS;

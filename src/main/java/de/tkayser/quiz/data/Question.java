@@ -1,9 +1,10 @@
 package de.tkayser.quiz.data;
 
+import java.util.List;
+
 public class Question {
 
     public String question;
-    public String[] answers;
-    public int right;
+    public List<String> answers;
 
 }

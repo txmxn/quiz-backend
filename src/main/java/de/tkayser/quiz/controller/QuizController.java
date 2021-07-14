@@ -42,59 +42,34 @@ public class QuizController {
     }
 
     private Quiz prepareQuiz() throws IOException {
-        Quiz quiz = loadQuiz();
+        Quiz quiz = loadQuiz(Quiz.class);
         limitMaxQuestions(quiz);
         shuffle(quiz);
         return quiz;
     }
 
-    private Quiz loadQuiz() throws IOException {
+    private <T> T loadQuiz(Class<T> clazz) throws IOException {
         try (InputStreamReader reader = new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream("database.json"))) {
-            return new Gson().fromJson(reader, Quiz.class);
+            return new Gson().fromJson(reader, clazz);
         }
     }
 
     private void limitMaxQuestions(Quiz quiz) {
-        while(quiz.questions.size() > maxQuestions) {
-            quiz.questions.remove(RANDOMIZER.nextInt(quiz.questions.size()));
-        }
+        new QuizFilter().filter(quiz, maxQuestions);
     }
 
     private void shuffle(Quiz quiz) {
         Collections.shuffle(quiz.questions);
         for (int i = 0; i < quiz.questions.size(); i++) {
-            shuffleAnswers(quiz.questions.get(i));
-            quiz.questions.get(i).right = -1;
-        }
-    }
-
-    private void shuffleAnswers(Question element) {
-        for (int i = element.answers.length -1 ; i > 0; i--) {
-            int j = RANDOMIZER.nextInt(i + 1);
-            switchAnswers(element, i, j);
-            switchRightAnswer(element, i, j);
-        }
-    }
-
-    private void switchAnswers(Question element, int i, int j) {
-        String tmp = element.answers[i];
-        element.answers[i] = element.answers[j];
-        element.answers[j] = tmp;
-    }
-
-    private void switchRightAnswer(Question element, int i, int j) {
-        if (element.right == j) {
-            element.right = i;
-        }
-        else if (element.right == i) {
-            element.right = j;
+            Question question = quiz.questions.get(i);
+            Collections.shuffle(question.answers);
         }
     }
 
     @PostMapping(path = "/solve", produces =  "application/json", consumes = "application/json")
     public Result solve(@RequestBody SelectedAnswer selectedAnswer, HttpSession session) throws IOException {
-        Quiz quiz = loadQuiz();
-        Optional<Question> question = searchQuestion(quiz, selectedAnswer.question);
+        QuizWithRight quiz = loadQuiz(QuizWithRight.class);
+        Optional<QuestionWithRight> question = searchQuestion(quiz, selectedAnswer.question);
         if (question.isPresent()) {
             return handleQuestion(question.get(), selectedAnswer, session);
         } else {
@@ -102,19 +77,17 @@ public class QuizController {
         }
     }
 
-    private Optional<Question> searchQuestion(Quiz quiz, String questionText) {
+    private Optional<QuestionWithRight> searchQuestion(QuizWithRight quiz, String questionText) {
         for (int i = 0; i < quiz.questions.size(); i++) {
-            Question question = quiz.questions.get(i);
+            QuestionWithRight question = quiz.questions.get(i);
             if (question.question.equals(questionText)) {
                 return Optional.of(question);
-            } else {
-                return Optional.empty();
             }
         }
         return Optional.empty();
     }
 
-    private Result handleQuestion(Question question, SelectedAnswer selectedAnswer, HttpSession session) {
+    private Result handleQuestion(QuestionWithRight question, SelectedAnswer selectedAnswer, HttpSession session) {
         if (isCorrect(question, selectedAnswer)) {
             return handleCorrectAnswer(selectedAnswer, session);
         }
@@ -123,8 +96,8 @@ public class QuizController {
         }
     }
 
-    private boolean isCorrect(Question question, SelectedAnswer selectedAnswer) {
-        return question.answers[question.right].equals(selectedAnswer.answer);
+    private boolean isCorrect(QuestionWithRight question, SelectedAnswer selectedAnswer) {
+        return question.answers.get(question.right).equals(selectedAnswer.answer);
     }
 
     private Result handleCorrectAnswer(SelectedAnswer selectedAnswer, HttpSession session) {
