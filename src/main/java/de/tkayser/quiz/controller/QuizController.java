@@ -14,18 +14,20 @@ import java.util.*;
 public class QuizController {
 
     private static final Random RANDOMIZER = new Random();
+    private static final String SESSION_ATTRIBUTE = "quiz";
+    private static final String UNKNOWN_USERNAME = "unknown";
 
     @Value("${maxQuestions}")
     private int maxQuestions = 10;
 
     private int highScore = 0;
-    private String username = "unknown";
+    private String username = UNKNOWN_USERNAME;
 
     @GetMapping(path = "/", produces =  "application/json")
     public Welcome welcome() {
         Welcome welcome = new Welcome();
         welcome.message = "Willkommen beim Quiz!";
-        welcome.highscore = highScore;
+        welcome.highScore = highScore;
         return welcome;
     }
 
@@ -36,9 +38,7 @@ public class QuizController {
     }
 
     private void resetSession(HttpSession session) {
-        session.removeAttribute("score");
-        session.removeAttribute("points");
-        session.removeAttribute("checked");
+        session.removeAttribute(SESSION_ATTRIBUTE);
     }
 
     private Quiz prepareQuiz() throws IOException {
@@ -128,58 +128,37 @@ public class QuizController {
     }
 
     private Result handleCorrectAnswer(SelectedAnswer selectedAnswer, HttpSession session) {
-        Integer points = getPointsFromSession(session);
-        Integer score = getScoreFromSession(session);
-        score += points;
+        QuizSession sessionValue = getFromSession(session);
+        sessionValue.handleCorrectAnswer();
+        handleHighScore(selectedAnswer.username, sessionValue.score);
+        session.setAttribute(SESSION_ATTRIBUTE, sessionValue);
+        return Result.correctResult(sessionValue.score, highScore, username);
+    }
+
+    private void handleHighScore(String username, int score) {
         if (highScore < score) {
             highScore = score;
-            if (selectedAnswer.username == null || "".equals(selectedAnswer.username)) {
-                username = "unknown";
+            if (username == null || "".equals(username)) {
+                this.username = UNKNOWN_USERNAME;
             } else {
-                username = selectedAnswer.username ;
+                this.username = username ;
             }
         }
-        session.setAttribute("score", score);
-        session.removeAttribute("points");
-        session.removeAttribute("checked");
-        return Result.correctResult(score, highScore, username);
     }
 
     private Result handleWrongAnswer(SelectedAnswer selectedAnswer, HttpSession session) {
-        List<String> checked = getCheckedFromSession(session);
-        Integer points = getPointsFromSession(session);
-        Integer score = getScoreFromSession(session);
-        if (points > 0 && !checked.contains(selectedAnswer.answer)) {
-            points--;
-            checked.add(selectedAnswer.answer);
-        }
-        session.setAttribute("points", points);
-        session.setAttribute("checked", checked);
-        return Result.wrongResult(points, score, highScore, username);
+        QuizSession sessionValue = getFromSession(session);
+        sessionValue.handleWrongAnswer(selectedAnswer.answer);
+        session.setAttribute(SESSION_ATTRIBUTE, sessionValue);
+        return Result.wrongResult(sessionValue.points, sessionValue.score, highScore, username);
     }
 
-    private Integer getPointsFromSession(HttpSession session) {
-        Integer points = (Integer) session.getAttribute("points");
-        if (points == null) {
-            points = Integer.valueOf(3);
+    private QuizSession getFromSession(HttpSession session) {
+        QuizSession quiz = (QuizSession) session.getAttribute(SESSION_ATTRIBUTE);
+        if (quiz == null) {
+            quiz = new QuizSession();
         }
-        return points;
-    }
-
-    private Integer getScoreFromSession(HttpSession session) {
-        Integer score = (Integer) session.getAttribute("score");
-        if (score == null) {
-            score = Integer.valueOf(0);
-        }
-        return score;
-    }
-
-    private List<String> getCheckedFromSession(HttpSession session) {
-        List<String> checked = (List<String>) session.getAttribute("checked");
-        if (checked == null) {
-            checked = new ArrayList<String>();
-        }
-        return checked;
+        return quiz;
     }
 
 }
