@@ -1,4 +1,4 @@
-package de.tkayser.quiz;
+package de.tkayser.quiz.data;
 
 public class Score {
 
