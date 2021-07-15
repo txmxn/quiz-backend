@@ -10,10 +10,10 @@ import java.io.*;
 import java.util.*;
 
 @RestController
+@RequestMapping("/app")
 @CrossOrigin(origins = "http://localhost:8080", methods = {RequestMethod.GET, RequestMethod.POST}, allowCredentials = "true")
 public class QuizController {
 
-    private static final Random RANDOMIZER = new Random();
     private static final String SESSION_ATTRIBUTE = "quiz";
     private static final String UNKNOWN_USERNAME = "unknown";
 
@@ -28,6 +28,7 @@ public class QuizController {
         Welcome welcome = new Welcome();
         welcome.message = "Willkommen beim Quiz!";
         welcome.highScore = highScore;
+        welcome.highScoreUser = username;
         return welcome;
     }
 

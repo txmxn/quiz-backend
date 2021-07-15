@@ -4,5 +4,6 @@ public class Welcome {
 
     public String message;
     public Integer highScore;
+    public String highScoreUser;
 
 }
